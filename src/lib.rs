@@ -143,7 +143,7 @@ impl Symbol for usize {
 /// Internal reference to `str` used only within the `StringInterner` itself
 /// to encapsulate the unsafe behaviour of interior references.
 #[derive(Debug, Copy, Clone, Eq)]
-struct InternalStrRef(*const str);
+pub struct InternalStrRef(*const str);
 
 impl InternalStrRef {
 	/// Creates an InternalStrRef from a str.
@@ -177,12 +177,20 @@ where
 
 impl Hash for InternalStrRef {
 	fn hash<H: Hasher>(&self, state: &mut H) {
+		eprintln!(
+			"InternalStrRef::hash(self={:p}={:?})",
+			self.0, self.as_str()
+		);
 		self.as_str().hash(state)
 	}
 }
 
 impl PartialEq for InternalStrRef {
 	fn eq(&self, other: &InternalStrRef) -> bool {
+		eprintln!(
+			"InternalStrRef::eq({:p}={:?}, {:p}={:?})",
+			self.0, self.as_str(), other.0, other.as_str()
+		);
 		self.as_str() == other.as_str()
 	}
 }
@@ -199,7 +207,7 @@ where
 	H: BuildHasher,
 {
 	map: HashMap<InternalStrRef, S, H>,
-	values: Vec<Box<str>>,
+	pub values: Vec<Box<str>>,
 }
 
 impl<S, H> PartialEq for StringInterner<S, H>

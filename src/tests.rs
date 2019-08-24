@@ -373,3 +373,52 @@ mod from_iterator {
 		);
 	}
 }
+
+mod unsoundness {
+	use super::*;
+
+	fn clone_and_drop() -> (DefaultStringInterner, Sym, *const u8) {
+		let mut old = DefaultStringInterner::new();
+		let foo = old.get_or_intern("foo");
+		eprintln!("old = {:#?}", old);
+		eprintln!(
+			"old value addrs = {:?}",
+			old
+				.values
+				.iter()
+				.map(|s| s.as_ptr())
+				.collect::<Vec<*const u8>>()
+		);
+
+		let new = old.clone();
+		let _bar = old.get_or_intern("bar");
+		// String slice at this address is freed with `old`.
+		let to_be_freed: *const u8 = old.values[0].as_ptr();
+		eprintln!("*** Address to be freed: {:p}", to_be_freed);
+
+		(new, foo, to_be_freed)
+	}
+
+	#[test]
+	fn inspect_new() {
+		let (mut new, foo, freed_addr) = clone_and_drop();
+		eprintln!("*** Now the string is freed: {:p}", freed_addr);
+		eprintln!("new = {:#?}", new);
+		eprintln!(
+			"new value addrs = {:?}",
+			new
+				.values
+				.iter()
+				.map(|s| s.as_ptr())
+				.collect::<Vec<*const u8>>()
+		);
+		eprintln!("new.resolve(foo) = {:?}", new.resolve(foo));
+		eprintln!("new.get_or_intern(\"foo\") = {:?}", new.get_or_intern("foo"));
+		eprintln!("new = {:#?}", new);
+		assert_eq!(
+			new.get_or_intern("foo"),
+			foo,
+			"`foo` should represent the string \"foo\" so they should be equal"
+		);
+	}
+}
