@@ -469,6 +469,15 @@ where
 	}
 }
 
+impl<'a, S> iter::ExactSizeIterator for Iter<'a, S>
+where
+	S: Symbol + 'a,
+{
+	fn len(&self) -> usize {
+		self.iter.len()
+	}
+}
+
 /// Iterator over the interned strings of a `StringInterner`.
 pub struct Values<'a, S>
 where
@@ -509,6 +518,15 @@ where
 	#[inline]
 	fn size_hint(&self) -> (usize, Option<usize>) {
 		self.iter.size_hint()
+	}
+}
+
+impl<'a, S> iter::ExactSizeIterator for Values<'a, S>
+where
+	S: Symbol + 'a,
+{
+	fn len(&self) -> usize {
+		self.iter.len()
 	}
 }
 
@@ -554,5 +572,14 @@ where
 	#[inline]
 	fn size_hint(&self) -> (usize, Option<usize>) {
 		self.iter.size_hint()
+	}
+}
+
+impl<'a, S> iter::ExactSizeIterator for IntoIter<S>
+where
+	S: Symbol,
+{
+	fn len(&self) -> usize {
+		self.iter.len()
 	}
 }
